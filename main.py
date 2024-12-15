@@ -1,23 +1,26 @@
 from sqlalchemy import create_engine, text
-from configs.config_app_user import dbname, user, password, host, port
+from configs.config_admin import dbname, user, password, host, port
 
 
 # 1. Создание таблиц
 def create_tables():
     with engine.connect() as connection:
         connection.execute(text("CALL system.create_tables()"))
+        connection.commit()
 
 
 # 2. Удаление всех таблиц
 def drop_tables():
     with engine.connect() as connection:
         connection.execute(text("CALL system.drop_all_tables()"))
+        connection.commit()
 
 
 # 3. Очистка таблиц
 def clear_table(table_name):
     with engine.connect() as connection:
         connection.execute(text("CALL system.clear_table(:table_name)"), {"table_name": table_name})
+        connection.commit()
 
 
 # 4. Добавление игры
@@ -43,14 +46,12 @@ def add_game():
             "p_genre_id": genre_id,
             "p_average_rating": average_rating
         })
+        connection.commit()
 
 
 if __name__ == '__main__':
     DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
     engine = create_engine(DATABASE_URL)
 
-    # Работет ли эта хуйня
-    with engine.connect() as conn:
-        result = conn.execute(text('SELECT version();'))
-        for row in result:
-            print(f'PostgreSQL Version: {row[0]}')
+    drop_tables()
+    create_tables()
