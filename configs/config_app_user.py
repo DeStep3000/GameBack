@@ -1,5 +1,5 @@
 dbname = 'gameback'
-user = 'postgres'
-password = 'DeStep316!'
+user = 'app_user'
+password = 'user_password'
 host = 'localhost'
 port = '5432'

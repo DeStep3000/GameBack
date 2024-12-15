@@ -1,0 +1,5 @@
+dbname = 'gameback'
+user = 'admin'
+password = 'admin_password'
+host = 'localhost'
+port = '5432'
