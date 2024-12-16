@@ -1,7 +1,13 @@
+import os
+
+os.environ['TCL_LIBRARY'] = r'C:\Users\destep\AppData\Local\Programs\Python\Python313\tcl\tcl8.6'
+os.environ['TK_LIBRARY'] = r'C:\Users\destep\AppData\Local\Programs\Python\Python313\tcl\tk8.6'
+
 from tkinter import Tk
 from gameback.main_window import MainWindow
 from gameback.login_window import LoginWindow
 from gameback.registration_window import RegistrationWindow
+
 
 class App(Tk):
     def __init__(self):
