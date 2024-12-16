@@ -1,9 +1,9 @@
-from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Toplevel, Label, messagebox, Entry
 from pathlib import Path
-from sqlalchemy import create_engine, text
-from configs.config_app_user import dbname, user, password, host, port
-from gameback.profile_window import ProfileWindow
+from tkinter import Canvas, Button, PhotoImage, Scrollbar, Frame, Toplevel, Label, messagebox, Entry
 
+from sqlalchemy import create_engine, text
+
+from configs.config_app_user import dbname, user, password, host, port
 
 DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
 engine = create_engine(DATABASE_URL)
@@ -70,7 +70,7 @@ class MainWindow(Frame):
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.master.show_frame(MainWindow),  # Переключение на окно MainWindow
+            command=lambda: self.master.show_frame('MainWindow'),  # Переключение на окно MainWindow
             relief="flat"
         ).pack(side="right", padx=5)
 
@@ -81,7 +81,7 @@ class MainWindow(Frame):
             image=self.button_image_5,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.master.show_frame(ProfileWindow),  # Переключение на окно ProfileWindow
+            command=lambda: self.master.show_frame('ProfileWindow'),  # Переключение на окно ProfileWindow
             relief="flat"
         ).pack(side="right", padx=5)
 
@@ -117,6 +117,10 @@ class MainWindow(Frame):
         self.master.current_user_id = None
         self.master.current_username = None
         self.switch_to_login()  # Возвращаемся на окно логина
+
+    def refresh(self):
+        """Обновляет имя пользователя в хедере"""
+        self.username_label.config(text=f"Пользователь: {self.master.current_username}")
 
     def update_username(self):
         self.username_label.config(text=f"Пользователь: {self.master.current_username}")

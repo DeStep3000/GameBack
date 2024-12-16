@@ -26,7 +26,7 @@ class App(Tk):
         self.frames = {}
 
         # Изначально показываем окно входа
-        self.show_frame(LoginWindow)
+        self.show_frame('LoginWindow')
 
     def show_main_window(self, user_id, username):
         self.current_user_id = user_id
@@ -34,25 +34,39 @@ class App(Tk):
         frame = self.frames.get(MainWindow)
         if frame:
             frame.update_username()  # Обновляем имя пользователя
-        self.show_frame(MainWindow)
+        self.show_frame('MainWindow')
 
-    def show_frame(self, frame_class):
+    def show_frame(self, frame_name):
+        # Преобразуем строку в класс, если нужно
+        frame_class = {
+            "MainWindow": MainWindow,
+            "ProfileWindow": ProfileWindow,
+            "LoginWindow": LoginWindow,
+            "RegistrationWindow": RegistrationWindow
+        }.get(frame_name, None)
+
+        if not frame_class:
+            raise ValueError(f"Неизвестное имя окна: {frame_name}")
         # Получаем уже созданный фрейм, если он есть
         frame = self.frames.get(frame_class)
 
         if not frame:
             if frame_class == LoginWindow:
                 frame = LoginWindow(self, lambda user_id, username: self.show_main_window(user_id, username),
-                                    lambda: self.show_frame(RegistrationWindow))
+                                    lambda: self.show_frame('RegistrationWindow'))
             elif frame_class == MainWindow:
-                frame = MainWindow(self, lambda: self.show_frame(LoginWindow))
+                frame = MainWindow(self, lambda: self.show_frame('LoginWindow'))
 
             elif frame_class == RegistrationWindow:
-                frame = RegistrationWindow(self, lambda: self.show_frame(LoginWindow))
+                frame = RegistrationWindow(self, lambda: self.show_frame('LoginWindow'))
             elif frame_class == ProfileWindow:
-                frame = ProfileWindow(self, lambda: self.show_frame(MainWindow))
+                frame = ProfileWindow(self, lambda: self.show_frame('MainWindow'))
             # Сохраняем фрейм в хранилище
             self.frames[frame_class] = frame
+        else:
+            # Обновляем фрейм при смене пользователя
+            if hasattr(frame, "refresh"):
+                frame.refresh()
 
         # Скрываем все текущие виджеты
         for widget in self.winfo_children():
