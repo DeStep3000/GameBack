@@ -17,14 +17,14 @@ def check_login(username, password):
     try:
         with engine.connect() as connection:
             result = connection.execute(
-                text("SELECT auth.login_user(:p_username, :p_password)"),
+                text("SELECT * FROM auth.get_user_info(:p_username, :p_password)"),
                 {"p_username": username, "p_password": password}
-            ).scalar()  # Возвращает значение True или False
+            ).fetchone()  # Возвращает строку с user_id и username
             connection.commit()
-        return result
+        return result  # Вернется None, если пользователя нет
     except Exception as e:
         messagebox.showerror("Ошибка", f"Ошибка при попытке входа: {e}")
-        return False
+        return None
 
 
 class LoginWindow(Frame):
@@ -131,8 +131,11 @@ class LoginWindow(Frame):
             messagebox.showerror("Ошибка", "Все поля должны быть заполнены!")
             return
 
-        if check_login(username, password):  # Проверяем логин через SQL функцию
-            # messagebox.showinfo("Успех", "Вход выполнен успешно!")
-            self.switch_to_main()  # Переход на страницу с играми
+        result = check_login(username, password)  # Проверяем логин через SQL функцию
+        if result:  # Если пользователь найден
+            user_id, username = result
+            self.master.current_user_id = user_id  # Сохраняем текущего пользователя
+            self.master.current_username = username
+            self.switch_to_main(user_id, username)  # Передаем данные пользователя в MainWindow
         else:
             messagebox.showerror("Ошибка", "Неверное имя пользователя или пароль.")

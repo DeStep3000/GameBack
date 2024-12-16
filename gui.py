@@ -17,10 +17,22 @@ class App(Tk):
         self.configure(bg="#FFFFFF")
         self.resizable(False, False)
 
+        # Атрибуты для хранения текущего пользователя
+        self.current_user_id = None
+        self.current_username = None
+
         # Хранилище для фреймов
         self.frames = {}
 
         # Изначально показываем окно входа
+        self.show_frame(LoginWindow)
+
+    def show_main_window(self, user_id, username):
+        self.current_user_id = user_id
+        self.current_username = username
+        frame = self.frames.get(MainWindow)
+        if frame:
+            frame.update_username()  # Обновляем имя пользователя
         self.show_frame(MainWindow)
 
     def show_frame(self, frame_class):
@@ -28,13 +40,12 @@ class App(Tk):
         frame = self.frames.get(frame_class)
 
         if not frame:
-            # Если фрейм еще не создан, создаем его
             if frame_class == LoginWindow:
-                frame = LoginWindow(self, lambda: self.show_frame(MainWindow),
+                frame = LoginWindow(self, lambda user_id, username: self.show_main_window(user_id, username),
                                     lambda: self.show_frame(RegistrationWindow))
             elif frame_class == MainWindow:
-                frame = MainWindow(self,
-                                   lambda: self.show_frame(LoginWindow))  # Передаем функцию для перехода на LoginWindow
+                frame = MainWindow(self, lambda: self.show_frame(LoginWindow))
+
             elif frame_class == RegistrationWindow:
                 frame = RegistrationWindow(self, lambda: self.show_frame(LoginWindow))
             # Сохраняем фрейм в хранилище

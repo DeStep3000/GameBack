@@ -19,8 +19,7 @@ class MainWindow(Frame):
         self.configure(bg="#EEE2DC")
 
         # Добавляем атрибут для хранения текущего ID игры
-        self.current_game_id = None
-        self.current_user_id = 1  # Пример текущего пользователя (замените на реальный ID пользователя)
+        self.current_game_id = None  # Пример текущего пользователя (замените на реальный ID пользователя)
 
         self.switch_to_login = switch_to_login
 
@@ -44,6 +43,22 @@ class MainWindow(Frame):
 
         Label(self.header, text="Gameback", bg="#EDC7B7", fg="#AC3B61", font=("InknutAntiqua Regular", 40)).pack(
             side="left", padx=20)
+
+        # Добавляем Label для отображения имени пользователя
+        self.username_label = Label(
+            self.header,
+            text=f"Пользователь: {self.master.current_username}",
+            bg="#EDC7B7",
+            fg="#123C69",
+            font=("Inter", 14)
+        )
+        self.username_label.pack(side="left", padx=10)
+
+        self.button_logout = Button(
+            self.header, text="Выход", bg="#AC3B61", fg="white",
+            font=("Inter", 14), command=self.logout
+        )
+        self.button_logout.pack(side="right", padx=10)
 
         # Статичные кнопки сверху
         self.button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
@@ -85,6 +100,14 @@ class MainWindow(Frame):
         self.reviews_container.pack(pady=5, padx=20, anchor="nw")
 
         self.create_game_buttons()
+
+    def logout(self):
+        self.master.current_user_id = None
+        self.master.current_username = None
+        self.switch_to_login()  # Возвращаемся на окно логина
+
+    def update_username(self):
+        self.username_label.config(text=f"Пользователь: {self.master.current_username}")
 
     def create_game_buttons(self):
         # Получаем список игр из базы данных
@@ -174,13 +197,18 @@ class MainWindow(Frame):
                 messagebox.showwarning("Предупреждение", "Заполните все поля и выберите оценку.")
                 return
 
+            user_id = self.master.current_user_id  # Получаем ID текущего пользователя
+            if not user_id:
+                messagebox.showerror("Ошибка", "Не удалось определить текущего пользователя. Перезайдите в систему.")
+                return
+
             with engine.connect() as connection:
                 try:
                     connection.execute(
                         text("CALL users.add_review(:game_id, :user_id, :rating, :comment)"),
                         {
                             'game_id': self.current_game_id,
-                            'user_id': self.current_user_id,  # Предположим, текущий пользователь известен
+                            'user_id': user_id,  # Передаем ID текущего пользователя
                             'rating': selected_rating[0],
                             'comment': review_text.get().strip()
                         }
