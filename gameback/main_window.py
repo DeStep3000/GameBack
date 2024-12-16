@@ -2,6 +2,8 @@ from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Toplevel, 
 from pathlib import Path
 from sqlalchemy import create_engine, text
 from configs.config_app_user import dbname, user, password, host, port
+from gameback.profile_window import ProfileWindow
+
 
 DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
 engine = create_engine(DATABASE_URL)
@@ -19,7 +21,7 @@ class MainWindow(Frame):
         self.configure(bg="#EEE2DC")
 
         # Добавляем атрибут для хранения текущего ID игры
-        self.current_game_id = None  # Пример текущего пользователя (замените на реальный ID пользователя)
+        self.current_game_id = None
 
         self.switch_to_login = switch_to_login
 
@@ -61,17 +63,27 @@ class MainWindow(Frame):
         self.button_logout.pack(side="right", padx=10)
 
         # Статичные кнопки сверху
+        # Кнопка "Игры" (button_4)
         self.button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
-        Button(self.header, image=self.button_image_4, borderwidth=0, highlightthickness=0, command=lambda: print(
-            "button_4 clicked"), relief="flat").pack(side="right", padx=5)
+        Button(
+            self.header,
+            image=self.button_image_4,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.master.show_frame(MainWindow),  # Переключение на окно MainWindow
+            relief="flat"
+        ).pack(side="right", padx=5)
 
+        # Кнопка "Мои отзывы" (button_5)
         self.button_image_5 = PhotoImage(file=relative_to_assets("button_5.png"))
-        Button(self.header, image=self.button_image_5, borderwidth=0, highlightthickness=0, command=lambda: print(
-            "button_5 clicked"), relief="flat").pack(side="right", padx=5)
-
-        self.button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
-        Button(self.header, image=self.button_image_3, borderwidth=0, highlightthickness=0,
-               command=self.switch_to_login, relief="flat").pack(side="right", padx=5)
+        Button(
+            self.header,
+            image=self.button_image_5,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.master.show_frame(ProfileWindow),  # Переключение на окно ProfileWindow
+            relief="flat"
+        ).pack(side="right", padx=5)
 
         # Left Panel
         self.left_frame = Frame(self.content_frame, bg="#EEE2DC", width=200)

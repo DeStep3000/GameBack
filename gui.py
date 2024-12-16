@@ -7,6 +7,7 @@ from tkinter import Tk
 from gameback.main_window import MainWindow
 from gameback.login_window import LoginWindow
 from gameback.registration_window import RegistrationWindow
+from gameback.profile_window import ProfileWindow
 
 
 class App(Tk):
@@ -48,6 +49,8 @@ class App(Tk):
 
             elif frame_class == RegistrationWindow:
                 frame = RegistrationWindow(self, lambda: self.show_frame(LoginWindow))
+            elif frame_class == ProfileWindow:
+                frame = ProfileWindow(self, lambda: self.show_frame(MainWindow))
             # Сохраняем фрейм в хранилище
             self.frames[frame_class] = frame
 
