@@ -21,7 +21,7 @@ class App(Tk):
         self.frames = {}
 
         # Изначально показываем окно входа
-        self.show_frame(LoginWindow)
+        self.show_frame(MainWindow)
 
     def show_frame(self, frame_class):
         # Получаем уже созданный фрейм, если он есть

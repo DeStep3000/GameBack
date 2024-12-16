@@ -1,7 +1,13 @@
-from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Toplevel, Label
+from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Toplevel, Label, messagebox, Entry
 from pathlib import Path
+from sqlalchemy import create_engine, text
+from configs.config_app_user import dbname, user, password, host, port
+
+DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
+engine = create_engine(DATABASE_URL)
 
 ASSETS_PATH = Path(__file__).parent.parent / "build" / "assets" / "frame02"
+
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -12,12 +18,13 @@ class MainWindow(Frame):
         super().__init__(parent)
         self.configure(bg="#EEE2DC")
 
+        # Добавляем атрибут для хранения текущего ID игры
+        self.current_game_id = None
+        self.current_user_id = 1  # Пример текущего пользователя (замените на реальный ID пользователя)
+
         self.switch_to_login = switch_to_login
 
-        self.main_canvas = Canvas(self, bg="#EEE2DC", height=668,
-                                  width=1094,
-                                  bd=0,
-                                  highlightthickness=0,
+        self.main_canvas = Canvas(self, bg="#EEE2DC", height=668, width=1094, bd=0, highlightthickness=0,
                                   relief="ridge")
         self.main_canvas.grid(row=0, column=0, sticky="nsew")
 
@@ -31,14 +38,10 @@ class MainWindow(Frame):
 
         self.content_frame.bind("<Configure>", self.on_frame_configure)
 
-        # Set row and column weights to make the layout responsive
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0)
-
         # Верхняя панель (header)
         self.header = Frame(self.content_frame, bg="#EDC7B7", height=58)
         self.header.grid(row=0, column=0, columnspan=2, sticky="ew")  # Stretch header across the width
+
         Label(self.header, text="Gameback", bg="#EDC7B7", fg="#AC3B61", font=("InknutAntiqua Regular", 40)).pack(
             side="left", padx=20)
 
@@ -52,103 +55,208 @@ class MainWindow(Frame):
             "button_5 clicked"), relief="flat").pack(side="right", padx=5)
 
         self.button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
-        Button(self.header, image=self.button_image_3, borderwidth=0, highlightthickness=0, command=self.switch_to_login, relief="flat").pack(side="right", padx=5)
+        Button(self.header, image=self.button_image_3, borderwidth=0, highlightthickness=0,
+               command=self.switch_to_login, relief="flat").pack(side="right", padx=5)
 
-        # Левая панель с кнопками (left_frame)
+        # Left Panel
         self.left_frame = Frame(self.content_frame, bg="#EEE2DC", width=200)
         self.left_frame.grid(row=1, column=0, sticky="ns", padx=10, pady=10)
 
-        # Правая панель с информацией и отзывами (right_frame)
+        # Right Panel
         self.right_frame = Frame(self.content_frame, bg="#BAB2B5")
-        self.right_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)  # Stretch the right panel
+        self.right_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
-        # Название игры
-        self.game_title = Label(self.right_frame, text="Игра 1", bg="#BAB2B5", fg="#123C69", font=("Inter", 18))
+        # Game Information
+        self.game_title = Label(self.right_frame, text="", bg="#BAB2B5", fg="#123C69", font=("Inter", 18))
         self.game_title.pack(pady=10, padx=20, anchor="nw")
 
-        # Описание игры
-        self.game_description = Label(self.right_frame, text="Описание игры: Захватывающее приключение с элементами стратегии.", bg="#BAB2B5", fg="#123C69", font=("Inter", 14), wraplength=800, justify="left")
+        self.game_description = Label(self.right_frame, text="", bg="#BAB2B5", fg="#123C69", font=("Inter", 14),
+                                      wraplength=800, justify="left")
         self.game_description.pack(pady=5, padx=20, anchor="nw")
 
-        # Кнопки "Подробнее" и "Оставить отзыв" перед отзывами
-        self.button_details = Button(self.right_frame, text="Подробнее", bg="#AC3B61", fg="white",
-                                     font=("Inter", 14), command=self.show_details)
-        self.button_details.pack(pady=5, padx=20, anchor="w")
+        self.game_details = Label(self.right_frame, text="", bg="#BAB2B5", fg="#123C69", font=("Inter", 14),
+                                  wraplength=800, justify="left")
+        self.game_details.pack(pady=5, padx=20, anchor="nw")
 
-        self.button_review = Button(self.right_frame, text="Оставить отзыв", bg="#AC3B61", fg="white",
-                                    font=("Inter", 14), command=self.leave_review)
-        self.button_review.pack(pady=5, padx=20, anchor="w")
-
-        # Список отзывов
         self.reviews_label = Label(self.right_frame, text="Отзывы:", bg="#BAB2B5", fg="#123C69", font=("Inter", 16))
         self.reviews_label.pack(pady=10, padx=20, anchor="nw")
 
-        self.review1 = Label(self.right_frame, text="Отличная игра! Очень увлекательная.", bg="#BAB2B5", fg="#123C69", font=("Inter", 14), wraplength=800, justify="left")
-        self.review1.pack(pady=5, padx=20, anchor="nw")
+        self.reviews_container = Frame(self.right_frame, bg="#BAB2B5")
+        self.reviews_container.pack(pady=5, padx=20, anchor="nw")
 
-        self.review2 = Label(self.right_frame, text="Не хватает больше уровней, но все равно интересно.", bg="#BAB2B5", fg="#123C69", font=("Inter", 14), wraplength=800, justify="left")
-        self.review2.pack(pady=5, padx=20, anchor="nw")
-
-        # Генерация списка игр
         self.create_game_buttons()
 
     def create_game_buttons(self):
-        # Пример списка игр с названием и описанием
-        self.games = {
-            "Игра 1": "Захватывающее приключение с элементами стратегии.",
-            "Игра 2": "Динамичная игра с элементами экшн.",
-            "Игра 3": "Интеллектуальная игра с головоломками.",
-            "Игра 4": "Мифологическая игра с элементами RPG.",
-            "Игра 5": "Классическая аркада с множеством уровней."
-        }
+        # Получаем список игр из базы данных
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT GameID, Title FROM games.Games")).fetchall()
 
-        def on_game_button_click(game_name, description):
-            self.update_game_info(game_name, description)
+        self.games = {row[0]: row[1] for row in result}
 
-        for game_name, description in self.games.items():
-            button = Button(self.left_frame, text=game_name, bg="#AC3B61", fg="white", font=("Inter", 14),
-                            command=lambda g=game_name, desc=description: on_game_button_click(g, desc))
+        def on_game_button_click(game_id):
+            self.current_game_id = game_id  # Обновляем текущий ID игры
+            self.update_game_info(game_id)
+
+        for game_id, title in self.games.items():
+            button = Button(self.left_frame, text=title, bg="#AC3B61", fg="white", font=("Inter", 14),
+                            command=lambda g_id=game_id: on_game_button_click(g_id))
             button.pack(pady=5, padx=10, anchor="w")
-
-    def update_game_info(self, game_name, description):
-        # Обновляем название и описание игры
-        self.game_title.config(text=game_name)
-        self.game_description.config(text=f"Описание игры: {description}")
-
-        # Обновляем отзывы (можно добавить сюда динамическое изменение)
-        self.review1.config(text="Отличная игра! Очень увлекательная.")
-        self.review2.config(text="Не хватает больше уровней, но все равно интересно.")
 
     def show_details(self):
         details_window = Toplevel(self)
         details_window.title("Подробнее")
-        details_window.geometry("400x300")
+        details_window.geometry("600x400")
         details_window.configure(bg="#EEE2DC")
-        Label(details_window, text="Подробности об игре", font=("Inter", 16), bg="#EEE2DC", fg="#123C69").pack(
-            pady=20)
+
+        with engine.connect() as connection:
+            try:
+                game_info = connection.execute(
+                    text("SELECT * FROM games.get_game_info(:game_id)"),
+                    {'game_id': self.current_game_id}  # Используем ID текущей игры
+                ).mappings().fetchone()
+
+                if game_info:
+                    Label(details_window, text=f"Название: {game_info['title']}", font=("Inter", 16, "bold"),
+                          bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
+                    Label(details_window, text=f"Описание: {game_info['description']}", font=("Inter", 14),
+                          bg="#EEE2DC", fg="#123C69", wraplength=500, justify="left").pack(pady=10, anchor="nw")
+                    Label(details_window, text=f"Жанр: {game_info['genre']}", font=("Inter", 14), bg="#EEE2DC",
+                          fg="#123C69").pack(pady=10, anchor="nw")
+                    Label(details_window, text=f"Разработчик: {game_info['developer']}", font=("Inter", 14),
+                          bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
+                    Label(details_window, text=f"Средний рейтинг: {game_info['averagerating']:.1f}/10",
+                          font=("Inter", 14),
+                          bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
+                else:
+                    Label(details_window, text="Информация об игре не найдена.", font=("Inter", 14),
+                          bg="#EEE2DC", fg="#123C69").pack(pady=20)
+            except Exception as e:
+                Label(details_window, text=f"Ошибка: {e}", font=("Inter", 14), bg="#EEE2DC", fg="#123C69").pack(pady=20)
 
     def leave_review(self):
         review_window = Toplevel(self)
         review_window.title("Оставить отзыв")
-        review_window.geometry("400x300")
+        review_window.geometry("500x400")
         review_window.configure(bg="#EEE2DC")
-        Label(review_window, text="Оставьте ваш отзыв о игре", font=("Inter", 16), bg="#EEE2DC", fg="#123C69").pack(
-            pady=20)
+
+        Label(review_window, text="Ваш отзыв:", font=("Inter", 16), bg="#EEE2DC", fg="#123C69").pack(pady=10,
+                                                                                                     anchor="w")
+
+        # Поле ввода отзыва
+        review_text = Entry(review_window, font=("Inter", 14), width=50)
+        review_text.pack(pady=10, padx=20)
+
+        Label(review_window, text="Ваша оценка:", font=("Inter", 16), bg="#EEE2DC", fg="#123C69").pack(pady=10,
+                                                                                                       anchor="w")
+
+        # Выбор оценки через звездочки
+        rating_frame = Frame(review_window, bg="#EEE2DC")
+        rating_frame.pack(pady=10)
+        stars = []
+        for i in range(1, 6):
+            star_button = Button(rating_frame, text="☆", font=("Inter", 20), bg="#EEE2DC", fg="#AC3B61",
+                                 command=lambda idx=i: set_rating(idx, stars))
+            star_button.grid(row=0, column=i - 1, padx=5)
+            stars.append(star_button)
+
+        # Установка оценки
+        selected_rating = [0]  # Храним выбранную оценку
+
+        def set_rating(idx, stars):
+            selected_rating[0] = idx * 2  # Преобразование в оценку от 1 до 10
+            for star in stars:
+                star.config(text="☆")  # Сбрасываем звездочки
+            for j in range(idx):
+                stars[j].config(text="★")  # Устанавливаем выбранные звездочки
+
+        def submit_review():
+            if selected_rating[0] == 0 or not review_text.get().strip():
+                messagebox.showwarning("Предупреждение", "Заполните все поля и выберите оценку.")
+                return
+
+            with engine.connect() as connection:
+                try:
+                    connection.execute(
+                        text("CALL users.add_review(:game_id, :user_id, :rating, :comment)"),
+                        {
+                            'game_id': self.current_game_id,
+                            'user_id': self.current_user_id,  # Предположим, текущий пользователь известен
+                            'rating': selected_rating[0],
+                            'comment': review_text.get().strip()
+                        }
+                    )
+                    connection.commit()
+                    messagebox.showinfo("Успех", "Отзыв успешно добавлен!")
+                    review_window.destroy()
+                    self.update_game_info(self.current_game_id)  # Обновляем отзывы
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось добавить отзыв: {e}")
+
+        # Кнопка "Отправить"
+        Button(review_window, text="Отправить", font=("Inter", 14), bg="#AC3B61", fg="white",
+               command=submit_review).pack(pady=20)
+
+    def update_game_info(self, game_id):
+        self.current_game_id = game_id  # Устанавливаем текущую игру
+        # Подключение к базе данных
+        with engine.connect() as connection:
+            try:
+                # Получение информации об игре
+                game_info = connection.execute(
+                    text("SELECT * FROM games.get_game_info(:game_id)"),
+                    {'game_id': int(game_id)}  # Приведение game_id к int
+                ).mappings().fetchone()  # Преобразование результата в словарь
+
+                if game_info:
+                    # Обновление названия игры с жирным шрифтом
+                    self.game_title.config(text=game_info['title'], font=("Inter", 18, "bold"))
+                    self.game_description.config(text=f"Описание: {game_info['description']}")
+
+                    # Удаление старых кнопок и отзывов
+                    for widget in self.right_frame.winfo_children():
+                        if isinstance(widget, Button) or isinstance(widget,
+                                                                    Label) and widget != self.game_title and widget != self.game_description:
+                            widget.destroy()
+
+                    # Кнопка "Подробнее"
+                    self.button_details = Button(self.right_frame, text="Подробнее", bg="#AC3B61", fg="white",
+                                                 font=("Inter", 14), command=self.show_details)
+                    self.button_details.pack(pady=5, padx=20, anchor="w")
+
+                    # Кнопка "Оставить отзыв"
+                    self.button_review = Button(self.right_frame, text="Оставить отзыв", bg="#AC3B61", fg="white",
+                                                font=("Inter", 14), command=self.leave_review)
+                    self.button_review.pack(pady=5, padx=20, anchor="w")
+
+                    # Отображение отзывов
+                    reviews_label = Label(self.right_frame, text="Отзывы:", bg="#BAB2B5", fg="#123C69",
+                                          font=("Inter", 16))
+                    reviews_label.pack(pady=10, padx=20, anchor="nw")
+
+                    # Получение отзывов
+                    reviews = connection.execute(
+                        text("SELECT * FROM games.get_reviews_for_game(:game_id)"),
+                        {'game_id': int(game_id)}  # Приведение game_id к int
+                    ).mappings().fetchall()  # Преобразование результата в словарь
+
+                    # Обновление отзывов
+                    if reviews:
+                        for review in reviews:
+                            Label(self.right_frame,
+                                  text=f"{review['username']} ({review['rating']}/10): {review['comment']}",
+                                  bg="#BAB2B5",
+                                  fg="#123C69", font=("Inter", 14), wraplength=800, justify="left").pack(pady=5,
+                                                                                                         padx=20,
+                                                                                                         anchor="nw")
+                    else:
+                        Label(self.right_frame, text="Отзывов пока нет.", bg="#BAB2B5", fg="#123C69",
+                              font=("Inter", 14),
+                              wraplength=800, justify="left").pack(pady=5, padx=20, anchor="nw")
+
+                else:
+                    messagebox.showinfo("Информация", "Информация об игре не найдена.")
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось получить информацию об игре: {e}")
 
     def on_frame_configure(self, event):
         self.main_canvas.configure(scrollregion=self.main_canvas.bbox("all"))
-
-
-if __name__ == "__main__":
-    root = Tk()
-    root.geometry("1500x700")
-    root.title("Gameback")
-
-    def switch_to_login():
-        print("Switch to login page")
-
-    app = MainWindow(root, switch_to_login)
-    app.grid(row=0, column=0, sticky="nsew")
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-    root.mainloop()
