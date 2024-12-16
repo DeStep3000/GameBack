@@ -8,6 +8,39 @@ from gameback.main_window import MainWindow
 from gameback.login_window import LoginWindow
 from gameback.registration_window import RegistrationWindow
 from gameback.profile_window import ProfileWindow
+from create_data import populate_database
+
+from configs.config_admin import dbname, user, password, host, port
+from sqlalchemy import create_engine, text
+
+DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
+engine = create_engine(DATABASE_URL)
+
+
+def create_tables_if_not_exist():
+    """Проверяет и создаёт таблицы с данными при необходимости."""
+    try:
+        with engine.connect() as connection:
+            # Проверка существования таблиц
+            result = connection.execute(text("""
+                SELECT COUNT(*) 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public';
+            """)).scalar()
+
+            # Если таблиц нет, создаем их и заполняем данными
+            if result == 0:
+                print("Таблицы не найдены. Создаём таблицы и заполняем данными...")
+                connection.execute(text("CALL system.create_tables()"))
+                connection.commit()
+
+                # Заполняем таблицы данными
+                populate_database()  # Вызов вашей функции из create_data.py
+                print("Таблицы успешно созданы и заполнены данными.")
+            else:
+                print("Таблицы уже существуют.")
+    except Exception as e:
+        print(f"Ошибка при создании таблиц или заполнении данными: {e}")
 
 
 class App(Tk):
@@ -59,6 +92,7 @@ class App(Tk):
 
             elif frame_class == RegistrationWindow:
                 frame = RegistrationWindow(self, lambda: self.show_frame('LoginWindow'))
+
             elif frame_class == ProfileWindow:
                 frame = ProfileWindow(self, lambda: self.show_frame('MainWindow'))
             # Сохраняем фрейм в хранилище

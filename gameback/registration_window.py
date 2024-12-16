@@ -19,20 +19,12 @@ def register_user(username, password, confirm_password, switch_to_login):
         return
 
     try:
-        # log = {"p_username": username, "p_password": password, "p_role": "user"}
-        # query = f"CALL auth.add_user(:{log["p_username"]}, :{log["p_password"]}, :{log["p_role"]});)"
-        # with engine.connect() as connection:
-        #     connection.execute(
-        #         text(query))
-        #     messagebox.showinfo("Успех", "Регистрация завершена успешно!")
-
         with engine.connect() as connection:
             connection.execute(
                 text("CALL auth.add_user(:p_username, :p_password, :p_role)"),
                 {"p_username": username, "p_password": password, "p_role": "user"},
             )
             connection.commit()
-        # messagebox.showinfo("Успех", "Регистрация завершена успешно!")
         switch_to_login()
     except Exception as e:
         messagebox.showerror("Ошибка", f"Придумайте другой логин")
@@ -182,6 +174,15 @@ class RegistrationWindow(Frame):
             width=299.0,
             height=40.0
         )
+
+        # Кнопка "Назад"
+        back_button = Button(
+            self, text="Назад",
+            bg="#F44336", fg="white", font=("Inter", 14),
+            borderwidth=0, highlightthickness=0,
+            command=self.switch_to_login  # Возвращаемся на экран логина
+        )
+        back_button.place(x=146.0, y=590.0, width=299.0, height=40.0)
 
     def handle_register(self):
         username = self.username_entry.get()

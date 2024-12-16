@@ -75,7 +75,7 @@ class LoginWindow(Frame):
             fill="#EDC7B7",
             outline="")
 
-        self.entry_2 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12))
+        self.entry_2 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12), show='*')
         self.entry_2.place(x=154.0, y=421.0, width=283.0, height=35.0)  # Позиционируем вручную
 
         canvas.create_rectangle(590.0, 0.0, 1180.0, 741.0, fill="#EDC7B7", outline="")
