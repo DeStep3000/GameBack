@@ -1,14 +1,34 @@
 from pathlib import Path
-from tkinter import Canvas, Entry, Button, PhotoImage, Frame
+from tkinter import Canvas, Entry, Button, PhotoImage, Frame, messagebox
+from sqlalchemy import create_engine, text
+from configs.config_app_user import dbname, user, password, host, port
+
+DATABASE_URL = f'postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}'
+engine = create_engine(DATABASE_URL)
 
 ASSETS_PATH = Path(__file__).parent.parent / "build" / "assets" / "frame00"
+
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 
+def check_login(username, password):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(
+                text("SELECT auth.login_user(:p_username, :p_password)"),
+                {"p_username": username, "p_password": password}
+            ).scalar()  # Возвращает значение True или False
+            connection.commit()
+        return result
+    except Exception as e:
+        messagebox.showerror("Ошибка", f"Ошибка при попытке входа: {e}")
+        return False
+
+
 class LoginWindow(Frame):
-    def __init__(self, parent, switch_to_other, switch_to_main):
+    def __init__(self, parent, switch_to_main, switch_to_other):
         super().__init__(parent)
         self.configure(bg="#FFFFFF")
 
@@ -21,15 +41,15 @@ class LoginWindow(Frame):
     def create_widgets(self):
         canvas = Canvas(
             self,
-            bg = "#FFFFFF",
-            height = 741,
-            width = 1180,
-            bd = 0,
-            highlightthickness = 0,
-            relief = "ridge"
+            bg="#FFFFFF",
+            height=741,
+            width=1180,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge"
         )
 
-        canvas.place(x = 0, y = 0)
+        canvas.place(x=0, y=0)
         canvas.create_rectangle(
             0.0,
             0.0,
@@ -55,13 +75,13 @@ class LoginWindow(Frame):
             fill="#EDC7B7",
             outline="")
 
-        entry_1 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12))
-        entry_1.place(x=154.0, y=421.0, width=283.0, height=35.0)  # Позиционируем вручную
+        self.entry_2 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12))
+        self.entry_2.place(x=154.0, y=421.0, width=283.0, height=35.0)  # Позиционируем вручную
 
         canvas.create_rectangle(590.0, 0.0, 1180.0, 741.0, fill="#EDC7B7", outline="")
 
-        entry_2 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12))
-        entry_2.place(x=154.0, y=331.0, width=283.0, height=35.0)
+        self.entry_1 = Entry(self, bd=2, bg="#FFFFFF", fg="#000716", highlightthickness=1, font=("Arial", 12))
+        self.entry_1.place(x=154.0, y=331.0, width=283.0, height=35.0)
 
         canvas.create_text(146.0, 303.0, anchor="nw", text="ВОЙТИ, ИСПОЛЬЗУЯ ИМЯ АККАУНТА", fill="#123C69",
                            font=("Inter", 16 * -1))
@@ -74,7 +94,7 @@ class LoginWindow(Frame):
             image=button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=self.switch_to_other,
+            command=self.handle_login,
             relief="flat"
         )
         button_1.image = button_image_1
@@ -92,7 +112,7 @@ class LoginWindow(Frame):
             image=button_image_2,
             borderwidth=0,
             highlightthickness=0,
-            command=self.switch_to_main,
+            command=self.switch_to_other,
             relief="flat"
         )
         button_2.image = button_image_2
@@ -103,3 +123,16 @@ class LoginWindow(Frame):
             height=26.0
         )
 
+    def handle_login(self):
+        username = self.entry_1.get()
+        password = self.entry_2.get()
+
+        if not username or not password:
+            messagebox.showerror("Ошибка", "Все поля должны быть заполнены!")
+            return
+
+        if check_login(username, password):  # Проверяем логин через SQL функцию
+            # messagebox.showinfo("Успех", "Вход выполнен успешно!")
+            self.switch_to_main()  # Переход на страницу с играми
+        else:
+            messagebox.showerror("Ошибка", "Неверное имя пользователя или пароль.")
