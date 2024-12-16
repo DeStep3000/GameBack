@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-from configs.config_app_user import dbname, user, password, host, port
+from configs.config_admin import dbname, user, password, host, port
 import logging
 
 logging.basicConfig()
@@ -82,19 +82,19 @@ genres = [
 
 games = [{'p_title': 'Valorant',
           'p_description': 'Valorant — командный тактический шутер от первого лица. Игроки делятся на две команды по 5 человек и сражаются в различных режимах, где одна сторона атакует, а другая защищает. Игра сочетает в себе элементы тактики и стратегического планирования, предлагая уникальных персонажей (агентов), каждый из которых обладает своими способностями.',
-          'p_release_date': '2020-06-02', 'p_developer_id': 1, 'p_genre_id': 1, 'p_average_rating': 9.0},
+          'p_release_date': '2020-06-02', 'p_developer_id': 1, 'p_genre_id': 1},
          {'p_title': 'Dota 2',
           'p_description': 'Dota 2 — многопользовательская командная компьютерная игра. В ней две команды по пять игроков сражаются на карте, стремясь уничтожить особый объект соперника — трон, и в то же время защитить от уничтожения собственный. Каждый игрок управляет героем с уникальными способностями и ролями, требующими стратегического подхода и командного взаимодействия.',
-          'p_release_date': '2013-07-09', 'p_developer_id': 2, 'p_genre_id': 2, 'p_average_rating': 9.2},
+          'p_release_date': '2013-07-09', 'p_developer_id': 2, 'p_genre_id': 2},
          {'p_title': 'Counter-Strike 2',
           'p_description': 'Counter-Strike 2 — тактический шутер от первого лица. Игроки делятся на команды террористов и контртеррористов, выполняя задачи, такие как установка или обезвреживание бомбы.',
-          'p_release_date': '2023-09-27', 'p_developer_id': 2, 'p_genre_id': 3, 'p_average_rating': 8.5},
+          'p_release_date': '2023-09-27', 'p_developer_id': 2, 'p_genre_id': 3},
          {'p_title': 'Genshin Impact',
           'p_description': 'Genshin Impact — приключенческая ролевая игра в открытом мире. Игроки исследуют фэнтезийный мир Тейвата, выполняя квесты, решая головоломки и сражаясь с врагами. Игра предлагает богатый выбор персонажей с уникальными способностями, глубокую систему прокачки и динамичные бои.',
-          'p_release_date': '2020-09-28', 'p_developer_id': 3, 'p_genre_id': 4, 'p_average_rating': 9.5},
+          'p_release_date': '2020-09-28', 'p_developer_id': 3, 'p_genre_id': 4},
          {'p_title': 'Resident Evil 4',
           'p_description': 'Resident Evil 4 — культовая игра в жанре survival horror и action. В центре сюжета — Леон С. Кеннеди, агент, отправленный в Европу для спасения дочери президента США из лап загадочного культа. Игроков ждут напряженные сражения с мутантами, элементы выживания и исследование атмосферных локаций.',
-          'p_release_date': '2023-03-24', 'p_developer_id': 4, 'p_genre_id': 5, 'p_average_rating': 9.3}]
+          'p_release_date': '2023-03-24', 'p_developer_id': 4, 'p_genre_id': 5}]
 
 game_platforms = [{'p_game_id': 1, 'p_platform_id': 1}, {'p_game_id': 1, 'p_platform_id': 3},
                   {'p_game_id': 1, 'p_platform_id': 5}, {'p_game_id': 2, 'p_platform_id': 1},
