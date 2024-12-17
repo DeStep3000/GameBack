@@ -16,11 +16,12 @@ def relative_to_assets(path: str) -> Path:
 
 
 class ProfileWindow(Frame):
-    def __init__(self, parent, go_back_callback):
+    def __init__(self, parent, go_back_callback, switch_to_login):
         super().__init__(parent)
         self.configure(bg="#EEE2DC")
 
         self.go_back_callback = go_back_callback
+        self.switch_to_login = switch_to_login
 
         self.main_canvas = Canvas(self, bg="#EEE2DC", height=668, width=1094, bd=0, highlightthickness=0,
                                   relief="ridge")

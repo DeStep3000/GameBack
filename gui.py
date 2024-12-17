@@ -94,7 +94,7 @@ class App(Tk):
                 frame = RegistrationWindow(self, lambda: self.show_frame('LoginWindow'))
 
             elif frame_class == ProfileWindow:
-                frame = ProfileWindow(self, lambda: self.show_frame('MainWindow'))
+                frame = ProfileWindow(self, lambda: self.show_frame('MainWindow'), lambda: self.show_frame('LoginWindow'))
             # Сохраняем фрейм в хранилище
             self.frames[frame_class] = frame
         else:
