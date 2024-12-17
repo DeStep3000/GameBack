@@ -144,8 +144,14 @@ class MainWindow(Frame):
     def show_details(self):
         details_window = Toplevel(self)
         details_window.title("Подробнее")
-        details_window.geometry("600x400")
+        details_window.minsize(600, 500)
         details_window.configure(bg="#EEE2DC")
+        # Позиционируем окно по центру экрана
+        details_window.geometry("+%d+%d" % (self.winfo_rootx() + 50, self.winfo_rooty() + 50))
+
+        # Контейнер для информации
+        container = Frame(details_window, bg="#EEE2DC")
+        container.pack(fill="both", expand=True, padx=10, pady=10)
 
         with engine.connect() as connection:
             try:
@@ -163,14 +169,22 @@ class MainWindow(Frame):
                           fg="#123C69").pack(pady=10, anchor="nw")
                     Label(details_window, text=f"Разработчик: {game_info['developer']}", font=("Inter", 14),
                           bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
-                    Label(details_window, text=f"Средний рейтинг: {game_info['averagerating']:.1f}/10",
-                          font=("Inter", 14),
+                    Label(details_window, text=f"Страна: {game_info['country']}", font=("Inter", 14),
                           bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
+                    Label(details_window, text=f"Средний рейтинг: {game_info['averagerating']:.1f}/10",
+                          font=("Inter", 14), bg="#EEE2DC", fg="#123C69").pack(pady=10, anchor="nw")
                 else:
                     Label(details_window, text="Информация об игре не найдена.", font=("Inter", 14),
                           bg="#EEE2DC", fg="#123C69").pack(pady=20)
+
             except Exception as e:
                 Label(details_window, text=f"Ошибка: {e}", font=("Inter", 14), bg="#EEE2DC", fg="#123C69").pack(pady=20)
+
+        # Автоматическое изменение размера окна под содержимое
+        details_window.update_idletasks()  # Обновляет размеры всех виджетов
+        width = container.winfo_reqwidth() + 20
+        height = container.winfo_reqheight() + 20
+        details_window.geometry(f"{width}x{height}")
 
     def leave_review(self):
         review_window = Toplevel(self)
@@ -204,27 +218,38 @@ class MainWindow(Frame):
         def set_rating(idx, stars):
             selected_rating[0] = idx * 2  # Преобразование в оценку от 1 до 10
             for star in stars:
-                star.config(text="☆")  # Сбрасываем звездочки
+                star.config(text="☆")
             for j in range(idx):
-                stars[j].config(text="★")  # Устанавливаем выбранные звездочки
+                stars[j].config(text="★")
 
         def submit_review():
             if selected_rating[0] == 0 or not review_text.get().strip():
                 messagebox.showwarning("Предупреждение", "Заполните все поля и выберите оценку.")
                 return
 
-            user_id = self.master.current_user_id  # Получаем ID текущего пользователя
+            user_id = self.master.current_user_id
             if not user_id:
                 messagebox.showerror("Ошибка", "Не удалось определить текущего пользователя. Перезайдите в систему.")
                 return
 
             with engine.connect() as connection:
                 try:
+                    # Вызов функции для проверки существующего отзыва
+                    result = connection.execute(
+                        text("SELECT users.check_review_exists(:game_id, :user_id)"),
+                        {"game_id": self.current_game_id, "user_id": user_id}
+                    ).scalar()
+
+                    if result:  # Если функция вернула TRUE
+                        messagebox.showwarning("Предупреждение", "Вы уже оставили отзыв для этой игры.")
+                        return
+
+                    # Если отзыва нет, добавляем его
                     connection.execute(
                         text("CALL users.add_review(:game_id, :user_id, :rating, :comment)"),
                         {
                             'game_id': self.current_game_id,
-                            'user_id': user_id,  # Передаем ID текущего пользователя
+                            'user_id': user_id,
                             'rating': selected_rating[0],
                             'comment': review_text.get().strip()
                         }
@@ -232,7 +257,7 @@ class MainWindow(Frame):
                     connection.commit()
                     messagebox.showinfo("Успех", "Отзыв успешно добавлен!")
                     review_window.destroy()
-                    self.update_game_info(self.current_game_id)  # Обновляем отзывы
+                    self.update_game_info(self.current_game_id)
                 except Exception as e:
                     messagebox.showerror("Ошибка", f"Не удалось добавить отзыв: {e}")
 
@@ -245,11 +270,10 @@ class MainWindow(Frame):
         # Подключение к базе данных
         with engine.connect() as connection:
             try:
-                # Получение информации об игре
                 game_info = connection.execute(
                     text("SELECT * FROM games.get_game_info(:game_id)"),
-                    {'game_id': int(game_id)}  # Приведение game_id к int
-                ).mappings().fetchone()  # Преобразование результата в словарь
+                    {'game_id': int(game_id)}
+                ).mappings().fetchone()
 
                 if game_info:
                     # Обновление названия игры с жирным шрифтом
